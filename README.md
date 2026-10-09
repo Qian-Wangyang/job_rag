@@ -61,11 +61,38 @@ pip install -r requirements.txt
 
 **2. 放你要问答的文档**
 
-把 `.md` 或 `.txt` 丢进 `docs/` 目录（仓库里自带一份 `docs/sample.md` 可以先用）。
+脚本按这个顺序找文档，**越靠前优先级越高**：
 
-docs/ 已经写进 `.gitignore`，你放进去的私人文档不会被提交。
+| 顺序 | 来源 | 适合什么场景 |
+|---|---|---|
+| ① | 命令行参数 `python step1_build_index.py 你的文档.md` | 临时换一份文档试试 |
+| ② | 项目根目录的 `local_source.txt` | **在本机固定一份文档**（日常用最省事） |
+| ③ | `docs/` 目录里唯一的 `.md` / `.txt` | 默认；仓库自带 `docs/sample.md` 可以先用 |
 
-也可以直接指定路径，不用放进 docs/：
+**选一种就行，下面是三种分别怎么用。**
+
+**方式 ③ · 最省事**
+
+把 `.md` / `.txt` 直接丢进 `docs/` 目录，然后跑 step1 即可。仓库自带的 `docs/sample.md`
+可以先拿来试用。`docs/` 已经写进 `.gitignore`，**你放进去的私人文档不会被提交**。
+
+**方式 ② · 本机固定一份（推荐日常用）**
+
+如果你的文档放在项目外面（比如自己的笔记目录），又不想每次都敲一遍长路径：
+
+1. 把 `local_source.txt.example` 复制一份，去掉 `.example` 后缀，变成 `local_source.txt`
+2. 打开它，把最下面那一行改成你文档的**绝对路径**
+3. 之后 `python step1_build_index.py` 不带参数就会读它
+
+`local_source.txt` 已经写进 `.gitignore`，**不会上传**，所以可以放心写本机路径。
+
+> 这也是「本机私有配置不进仓库」的常见做法：**代码里只留回退逻辑，
+> 路径、凭据这类只属于本机的东西放进被 gitignore 的本地文件**。
+> 效果就是 —— 你本机读自己的文档，别人 clone 下来直接读 `docs/sample.md`，两边互不干扰。
+
+**方式 ① · 临时用**
+
+不改任何文件，直接把路径当参数传进去：
 
 ```bash
 python step1_build_index.py path/to/你的笔记.md
@@ -96,11 +123,12 @@ streamlit run step3_app.py
 ```
 job_rag/
 ├── docs/
-│   └── sample.md            示例知识库（自己的文档也放这里）
-├── index/                   索引产物，跑 step1 自动生成（已 gitignore）
-├── step1_build_index.py     切块 + 算向量 + 存索引
-├── step2_ask.py             检索 + 生成（含 CLI 交互）
-├── step3_app.py             Streamlit 网页界面
+│   └── sample.md              示例知识库（自己的文档也可以放这里）
+├── index/                     索引产物，跑 step1 自动生成（已 gitignore）
+├── local_source.txt.example   本机固定文档路径的模板（复制成 local_source.txt 用）
+├── step1_build_index.py       切块 + 算向量 + 存索引
+├── step2_ask.py               检索 + 生成（含 CLI 交互）
+├── step3_app.py               Streamlit 网页界面
 ├── requirements.txt
 └── .gitignore
 ```
@@ -157,7 +185,10 @@ TF-IDF 加 SVD 降维是经典的潜在语义分析（LSA）路线，**零模型
 ## 已知局限
 
 - **纯本地 CPU 推理**，3B 模型在 CPU 上大约 2~8 秒出答案，首次调用还要加载模型
-- **小模型指令遵循不稳定**，偶尔会对有资料的题目保守拒答
+- **小模型指令遵循不稳定**：3B 模型对**问法**比较敏感，偶尔会对有资料的题目保守拒答。
+  实测同一个问题，问「RAG 的完整链路是什么？」能正常回答；
+  问成「那 RAG 的完整链路是什么？」（前面多一个「那」）它就回答「资料中没有相关内容」——
+  而那一次检索相似度反而是最高的（0.804）。**遇到拒答先换个问法再试，不一定是检索出了问题。**
 - **只支持 Markdown / 纯文本**，PDF、Word 需要先转成文本
 - **没有会话记忆**，每次提问都是独立的
 - 检索是**单次 Top-K**，没有做重排（rerank）

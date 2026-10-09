@@ -1,0 +1,21 @@
+# 本机私有文档路径（可选）
+#
+# 作用：让 `python step1_build_index.py` 不带参数时，直接读你电脑上的某份文档。
+#
+# 用法：
+#   1. 把本文件复制一份，去掉 .example 后缀，变成  local_source.txt
+#   2. 打开它，把最下面那一行改成你自己文档的绝对路径
+#   3. 之后直接跑  python step1_build_index.py  就行
+#
+# 脚本找文档的顺序（越靠前优先级越高）：
+#   ① 命令行参数   python step1_build_index.py 你的文档.md
+#   ② 本文件       local_source.txt
+#   ③ docs/ 目录里唯一的 .md / .txt（仓库自带 docs/sample.md）
+#
+# 为什么要单独放一个文件：
+#   绝对路径是你本机的东西，不该写死进代码、也不该提交到仓库。
+#   local_source.txt 已经写进 .gitignore，不会被上传。
+#
+# 不需要的话：不要创建 local_source.txt 就行（只留着这个 .example 文件是没用的）。
+
+D:\我的文档\学习笔记.md

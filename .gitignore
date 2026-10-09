@@ -5,6 +5,9 @@ index/
 docs/*
 !docs/sample.md
 
+# 本机私有的文档路径（里面写的是自己电脑上的绝对路径，不该提交）
+local_source.txt
+
 # Python
 __pycache__/
 *.py[cod]

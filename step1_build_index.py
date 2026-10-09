@@ -15,6 +15,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import normalize
 
 DOCS_DIR = "docs"  # 待问答的文档放这里（.md 或 .txt）
+LOCAL_SOURCE = "local_source.txt"  # 本机私有文档路径（已写进 .gitignore，不会上传）
 OUT_DIR = "index"  # 索引输出目录（已写进 .gitignore，不会上传）
 MAX_LEN = 600  # 每块最多多少字
 MIN_LEN = 40  # 太短的块合并掉
@@ -24,10 +25,29 @@ SVD_DIM = 256  # 向量维度
 HEAD = re.compile(r"^(#{1,4})\s+(.*)")
 
 
+def _read_local_source():
+    """读 local_source.txt：取第一个非空、且不以 # 开头的行，当作文档路径。
+
+    没有这个文件就返回 None（说明没做本地固定）。这个文件是本地私有的，
+    已写进 .gitignore，不会跟着仓库走。
+    """
+    if not os.path.isfile(LOCAL_SOURCE):
+        return None
+    with io.open(LOCAL_SOURCE, encoding="utf-8") as f:
+        for ln in f:
+            ln = ln.strip()
+            if ln and not ln.startswith("#"):
+                return ln
+    return None
+
+
 def resolve_source():
     """决定这次读哪份文档。
 
-    优先用命令行传进来的路径；没传就去 docs/ 里找唯一的 .md / .txt。
+    三级回退，越靠前优先级越高：
+      ① 命令行参数：python step1_build_index.py 你的文档.md
+      ② local_source.txt 里写的那一行（可选，用来在本机固定一份私有文档）
+      ③ docs/ 目录里唯一的 .md / .txt
     所以换台电脑、换份文档都不用改代码。
     """
     if len(sys.argv) > 1:
@@ -35,6 +55,16 @@ def resolve_source():
         if not os.path.isfile(path):
             raise SystemExit("找不到文档：%s" % path)
         return path
+
+    local = _read_local_source()
+    if local:
+        if os.path.isfile(local):
+            return local
+        raise SystemExit(
+            "%s 里写的路径不存在：\n  %s\n"
+            "改掉它，或者删掉这个文件（删掉之后就回到 docs/ 目录里取文档）。"
+            % (LOCAL_SOURCE, local)
+        )
 
     if not os.path.isdir(DOCS_DIR):
         raise SystemExit(
