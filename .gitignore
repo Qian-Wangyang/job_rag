@@ -1,0 +1,24 @@
+# 索引文件（几十 MB，跑 step1 会自动生成，不用提交）
+index/
+
+# 你自己的文档（避免把私人笔记 / 有版权的资料传上去；sample.md 是示例，保留）
+docs/*
+!docs/sample.md
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# 编辑器 / IDE
+.idea/
+.vscode/
+
+# 系统
+.DS_Store
+Thumbs.db
